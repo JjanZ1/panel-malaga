@@ -1,11 +1,194 @@
-SERVEO MALAGA LOG
+<!DOCTYPE html>
+<html lang="es">
 
-lunes, 21 de septiembre de 2026
+<head>
+<meta charset="UTF-8">
+<title>SERVEO MALAGA LOG</title>
 
-15:xx:xx
+<style>
 
-PREVISIÓN DEL TIEMPO
+body{
+    margin:0;
+    background:#0b1220;
+    color:white;
+    font-family:Segoe UI, Arial, sans-serif;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
 
-Málaga
-☀️ 28°C
-Cielo despejado
+.header{
+    background:#003b75;
+    padding:25px;
+    text-align:center;
+}
+
+.header h1{
+    margin:0;
+    font-size:60px;
+}
+
+.fecha{
+    font-size:30px;
+    margin-top:10px;
+}
+
+.reloj{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:110px;
+    font-weight:bold;
+    color:#4fc3f7;
+}
+
+.panel-tiempo{
+    background:#18263f;
+    padding:30px;
+    text-align:center;
+}
+
+.panel-tiempo h2{
+    font-size:40px;
+    margin:0 0 15px 0;
+}
+
+.panel-tiempo p{
+    font-size:28px;
+    margin:8px;
+}
+
+.footer{
+    background:#003b75;
+    text-align:center;
+    padding:12px;
+    font-size:18px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+    <h1>SERVEO MALAGA LOG</h1>
+    <div id="fecha" class="fecha"></div>
+</div>
+
+<div id="hora" class="reloj"></div>
+
+<div class="panel-tiempo">
+    <h2>PREVISIÓN DEL TIEMPO</h2>
+
+    <p id="temperatura">Cargando...</p>
+
+    <p id="estado"></p>
+
+    <p id="viento"></p>
+
+</div>
+
+<div class="footer">
+    Actualización automática cada 10 minutos
+</div>
+
+<script>
+
+function actualizarHora() {
+
+    const ahora = new Date();
+
+    document.getElementById("hora").innerHTML =
+        ahora.toLocaleTimeString("es-ES");
+
+    document.getElementById("fecha").innerHTML =
+        ahora.toLocaleDateString("es-ES", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+
+}
+
+async function cargarTiempo() {
+
+    try {
+
+        const respuesta = await fetch(
+            "https://api.open-meteo.com/v1/forecast?latitude=36.72&longitude=-4.42&current=temperature_2m,weather_code,wind_speed_10m"
+        );
+
+        const datos = await respuesta.json();
+
+        document.getElementById("temperatura").innerHTML =
+            "🌡️ " + datos.current.temperature_2m + " °C";
+
+        document.getElementById("viento").innerHTML =
+            "💨 Viento: " + datos.current.wind_speed_10m + " km/h";
+
+        let estado = "Información no disponible";
+
+        switch (datos.current.weather_code) {
+
+            case 0:
+                estado = "☀️ Despejado";
+                break;
+
+            case 1:
+            case 2:
+            case 3:
+                estado = "⛅ Parcialmente nuboso";
+                break;
+
+            case 45:
+            case 48:
+                estado = "🌫️ Niebla";
+                break;
+
+            case 51:
+            case 53:
+            case 55:
+                estado = "🌦️ Llovizna";
+                break;
+
+            case 61:
+            case 63:
+            case 65:
+                estado = "🌧️ Lluvia";
+                break;
+
+            case 71:
+            case 73:
+            case 75:
+                estado = "❄️ Nieve";
+                break;
+
+            case 95:
+                estado = "⛈️ Tormenta";
+                break;
+        }
+
+        document.getElementById("estado").innerHTML = estado;
+
+    } catch (error) {
+
+        document.getElementById("temperatura").innerHTML =
+            "Error obteniendo datos meteorológicos";
+
+    }
+
+}
+
+actualizarHora();
+cargarTiempo();
+
+setInterval(actualizarHora, 1000);
+setInterval(cargarTiempo, 600000);
+
+</script>
+
+</body>
+</html>
