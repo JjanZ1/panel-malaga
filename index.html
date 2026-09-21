@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
 <meta charset="UTF-8">
 <title>SERVEO MALAGA LOG</title>
 
 <style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
 body{
-    margin:0;
-    background:#0b1220;
-    color:white;
+    background:#f4f4f4;
+    color:#222;
     font-family:Segoe UI, Arial, sans-serif;
     height:100vh;
     display:flex;
@@ -18,19 +21,19 @@ body{
 }
 
 .header{
-    background:#003b75;
+    background:#FF5A00;
+    color:white;
     padding:25px;
     text-align:center;
 }
 
 .header h1{
-    margin:0;
     font-size:60px;
 }
 
 .fecha{
-    font-size:30px;
     margin-top:10px;
+    font-size:28px;
 }
 
 .reloj{
@@ -38,34 +41,37 @@ body{
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:110px;
+    font-size:130px;
     font-weight:bold;
-    color:#4fc3f7;
+    color:#FF5A00;
+    background:white;
 }
 
 .panel-tiempo{
-    background:#18263f;
-    padding:30px;
+    background:white;
+    border-top:8px solid #FF5A00;
+    padding:25px;
     text-align:center;
 }
 
 .panel-tiempo h2{
-    font-size:40px;
-    margin:0 0 15px 0;
+    color:#FF5A00;
+    font-size:38px;
+    margin-bottom:15px;
 }
 
 .panel-tiempo p{
-    font-size:28px;
+    font-size:30px;
     margin:8px;
 }
 
 .footer{
-    background:#003b75;
+    background:#FF5A00;
+    color:white;
     text-align:center;
-    padding:12px;
+    padding:10px;
     font-size:18px;
 }
-
 </style>
 
 </head>
@@ -77,9 +83,12 @@ body{
     <div id="fecha" class="fecha"></div>
 </div>
 
-<div id="hora" class="reloj"></div>
+<div id="hora" class="reloj">
+    --:--:--
+</div>
 
 <div class="panel-tiempo">
+
     <h2>PREVISIÓN DEL TIEMPO</h2>
 
     <p id="temperatura">Cargando...</p>
@@ -91,47 +100,51 @@ body{
 </div>
 
 <div class="footer">
-    Actualización automática cada 10 minutos
+    Málaga María Zambrano
 </div>
 
 <script>
 
-function actualizarHora() {
+function actualizarHora(){
 
     const ahora = new Date();
 
-    document.getElementById("hora").innerHTML =
+    document.getElementById("hora").textContent =
         ahora.toLocaleTimeString("es-ES");
 
-    document.getElementById("fecha").innerHTML =
+    document.getElementById("fecha").textContent =
         ahora.toLocaleDateString("es-ES", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric"
+            weekday:"long",
+            year:"numeric",
+            month:"long",
+            day:"numeric"
         });
 
 }
 
-async function cargarTiempo() {
+async function cargarTiempo(){
 
-    try {
+    try{
 
         const respuesta = await fetch(
-            "https://api.open-meteo.com/v1/forecast?latitude=36.72&longitude=-4.42&current=temperature_2m,weather_code,wind_speed_10m"
+            "https://api.open-meteo.com/v1/forecast?latitude=36.7213&longitude=-4.4214&current_weather=true"
         );
+
+        if(!respuesta.ok){
+            throw new Error("HTTP " + respuesta.status);
+        }
 
         const datos = await respuesta.json();
 
-        document.getElementById("temperatura").innerHTML =
-            "🌡️ " + datos.current.temperature_2m + " °C";
+        document.getElementById("temperatura").textContent =
+            "🌡️ " + datos.current_weather.temperature + " °C";
 
-        document.getElementById("viento").innerHTML =
-            "💨 Viento: " + datos.current.wind_speed_10m + " km/h";
+        document.getElementById("viento").textContent =
+            "💨 Viento: " + datos.current_weather.windspeed + " km/h";
 
-        let estado = "Información no disponible";
+        let estado = "Información meteorológica";
 
-        switch (datos.current.weather_code) {
+        switch(datos.current_weather.weathercode){
 
             case 0:
                 estado = "☀️ Despejado";
@@ -169,14 +182,23 @@ async function cargarTiempo() {
             case 95:
                 estado = "⛈️ Tormenta";
                 break;
+
         }
 
-        document.getElementById("estado").innerHTML = estado;
+        document.getElementById("estado").textContent =
+            estado;
 
-    } catch (error) {
+    }
+    catch(error){
 
-        document.getElementById("temperatura").innerHTML =
-            "Error obteniendo datos meteorológicos";
+        document.getElementById("temperatura").textContent =
+            "❌ ERROR API";
+
+        document.getElementById("estado").textContent =
+            error.message;
+
+        document.getElementById("viento").textContent =
+            "";
 
     }
 
@@ -185,8 +207,8 @@ async function cargarTiempo() {
 actualizarHora();
 cargarTiempo();
 
-setInterval(actualizarHora, 1000);
-setInterval(cargarTiempo, 600000);
+setInterval(actualizarHora,1000);
+setInterval(cargarTiempo,600000);
 
 </script>
 
